@@ -17,7 +17,7 @@ export default function RootLayout({
 	children: React.ReactNode;
 }) {
 	return (
-		<html data-theme='synthwave' lang='en'>
+		<html data-theme='corporate' lang='en'>
 			<body className={inter.className}>
 				<AuthProvider>
 					<Navbar />
