@@ -10,9 +10,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Authentication Models
+// Authentication Models
 model Account {
   id                String  @id @default(cuid())
-  userId            String
+  userId            Int
   type              String
   provider          String
   providerAccountId String
@@ -32,20 +34,9 @@ model Account {
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique
-  userId       String
+  userId       Int
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  hashedPassword String?
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
 }
 
 model VerificationToken {
@@ -54,4 +45,90 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// Issue Tracker Models
+model User {
+  id             Int             @id @default(autoincrement())
+  name           String?
+  email          String?         @unique
+  hashedPassword String?
+  emailVerified  DateTime?
+  image          String?
+  username       String?          @unique
+  password       String?
+  assignedIssues Issue[]         @relation("AssignedTo")
+  reportedIssues Issue[]         @relation("ReportedBy")
+  accounts       Account[]
+  sessions       Session[]
+  projectMembers ProjectMember[]
+  comments       Comment[]       @relation("CommentBy")
+}
+
+model Project {
+  id          Int             @id @default(autoincrement())
+  name        String
+  description String?
+  memberId    Int
+  issues      Issue[]
+  members     ProjectMember[] // Use the join table directly
+}
+
+model ProjectMember {
+  id        Int     @id @default(autoincrement())
+  projectId Int
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id])
+}
+
+model Issue {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String
+  status      String
+  assignee    User?        @relation("AssignedTo", fields: [assigneeId], references: [id])
+  assigneeId  Int?
+  reporter    User         @relation("ReportedBy", fields: [reporterId], references: [id])
+  reporterId  Int
+  project     Project      @relation(fields: [projectId], references: [id])
+  projectId   Int
+  comments    Comment[]
+  attachments Attachment[]
+  dueDate     DateTime?
+  labels      Label[]
+  milestones  Milestone?   @relation(fields: [milestoneId], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  milestoneId Int?
+}
+
+model Label {
+  id     Int     @id @default(autoincrement())
+  name   String
+  issues Issue[]
+}
+
+model Comment {
+  id          Int    @id @default(autoincrement())
+  text        String
+  createdBy   User   @relation("CommentBy", fields: [createdById], references: [id])
+  createdById Int
+  issue       Issue  @relation(fields: [issueId], references: [id])
+  issueId     Int
+}
+
+model Attachment {
+  id       Int    @id @default(autoincrement())
+  filename String
+  issue    Issue  @relation(fields: [issueId], references: [id])
+  issueId  Int
+}
+
+model Milestone {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  dueDate     DateTime?
+  issues      Issue[]
 }
