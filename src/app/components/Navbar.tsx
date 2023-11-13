@@ -4,8 +4,11 @@ import Link from "next/link";
 import React from "react";
 import logo from "../../../public/cover.png";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
+import classNames from "classnames";
 const Navbar = () => {
 	const { status, data: session } = useSession();
+	const currentPath = usePathname();
 
 	const links = [
 		{ label: "Projects", href: "/projects" },
@@ -22,7 +25,12 @@ const Navbar = () => {
 				<nav>
 					{links.map((link) => (
 						<Link
-							className='mr-3 font-sans font-semibold hover:text-accent'
+							// className='mr-3 font-sans font-semibold hover:text-accent'
+							className={classNames({
+								"mr-3 font-poppins font-medium text-base ": true,
+								"text-accent": link.href === currentPath,
+								"hover:text-accent": true,
+							})}
 							key={link.href}
 							href={link.href}
 						>
