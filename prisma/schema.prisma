@@ -54,8 +54,9 @@ model User {
   email          String?         @unique
   hashedPassword String?
   emailVerified  DateTime?
+  role           Role
   image          String?
-  username       String?          @unique
+  username       String?         @unique
   password       String?
   assignedIssues Issue[]         @relation("AssignedTo")
   reportedIssues Issue[]         @relation("ReportedBy")
@@ -63,6 +64,16 @@ model User {
   sessions       Session[]
   projectMembers ProjectMember[]
   comments       Comment[]       @relation("CommentBy")
+}
+
+enum Role {
+  ADMIN
+  PROJECT_OWNER
+  PROJECT_MEMBER
+  REPORTER
+  ASSIGNEE
+  VIEWER
+  GUEST
 }
 
 model Project {
@@ -84,9 +95,9 @@ model ProjectMember {
 
 model Issue {
   id          Int          @id @default(autoincrement())
-  title       String
-  description String
-  status      String
+  title       String       @db.VarChar(255)
+  description String       @db.Text
+  status      Status       @default(OPEN)
   assignee    User?        @relation("AssignedTo", fields: [assigneeId], references: [id])
   assigneeId  Int?
   reporter    User         @relation("ReportedBy", fields: [reporterId], references: [id])
@@ -97,10 +108,14 @@ model Issue {
   attachments Attachment[]
   dueDate     DateTime?
   labels      Label[]
-  milestones  Milestone?   @relation(fields: [milestoneId], references: [id])
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-  milestoneId Int?
+}
+
+enum Status {
+  OPEN
+  IN_PROGRESS
+  CLOSED
 }
 
 model Label {
@@ -123,12 +138,4 @@ model Attachment {
   filename String
   issue    Issue  @relation(fields: [issueId], references: [id])
   issueId  Int
-}
-
-model Milestone {
-  id          Int       @id @default(autoincrement())
-  name        String
-  description String?
-  dueDate     DateTime?
-  issues      Issue[]
 }
